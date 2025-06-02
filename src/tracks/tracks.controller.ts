@@ -8,13 +8,16 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { TracksService } from './tracks.service';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { Track } from './entities/track.entity';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('track')
+@UseGuards(AuthGuard)
 export class TracksController {
   constructor(private readonly tracksService: TracksService) {}
 
