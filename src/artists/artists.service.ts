@@ -7,10 +7,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { Artist } from './entities/artist.entity';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
+import { TracksService } from '../tracks/tracks.service';
+import { AlbumsService } from '../albums/albums.service';
 
 @Injectable()
 export class ArtistsService {
   private artists: Artist[] = [];
+
+  constructor(
+    private readonly tracksService: TracksService,
+    private readonly albumsService: AlbumsService,
+  ) {}
 
   findAll(): Artist[] {
     return this.artists;
@@ -69,6 +76,22 @@ export class ArtistsService {
     if (artistIndex === -1) {
       throw new NotFoundException('Artist not found');
     }
+
+    // Update related tracks
+    const tracks = this.tracksService.findAll();
+    tracks.forEach((track) => {
+      if (track.artistId === id) {
+        this.tracksService.update(track.id, { ...track, artistId: null });
+      }
+    });
+
+    // Update related albums
+    const albums = this.albumsService.findAll();
+    albums.forEach((album) => {
+      if (album.artistId === id) {
+        this.albumsService.update(album.id, { ...album, artistId: null });
+      }
+    });
 
     this.artists.splice(artistIndex, 1);
   }
