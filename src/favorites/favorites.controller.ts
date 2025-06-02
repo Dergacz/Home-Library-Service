@@ -15,20 +15,21 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   findAll(): FavoritesResponse {
     return this.favoritesService.findAll();
   }
 
-  @Post('track/:id')
+  @Post('artist/:id')
   @HttpCode(HttpStatus.CREATED)
-  addTrack(@Param('id') id: string): void {
-    this.favoritesService.addTrack(id);
+  addArtist(@Param('id') id: string): void {
+    this.favoritesService.addArtist(id);
   }
 
-  @Delete('track/:id')
+  @Delete('artist/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeTrack(@Param('id') id: string): void {
-    this.favoritesService.removeTrack(id);
+  removeArtist(@Param('id') id: string): void {
+    this.favoritesService.removeArtist(id);
   }
 
   @Post('album/:id')
@@ -43,15 +44,15 @@ export class FavoritesController {
     this.favoritesService.removeAlbum(id);
   }
 
-  @Post('artist/:id')
+  @Post('track/:id')
   @HttpCode(HttpStatus.CREATED)
-  addArtist(@Param('id') id: string): void {
-    this.favoritesService.addArtist(id);
+  addTrack(@Param('id') id: string): void {
+    this.favoritesService.addTrack(id);
   }
 
-  @Delete('artist/:id')
+  @Delete('track/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeArtist(@Param('id') id: string): void {
-    this.favoritesService.removeArtist(id);
+  removeTrack(@Param('id') id: string): void {
+    this.favoritesService.removeTrack(id);
   }
 }

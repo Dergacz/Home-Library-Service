@@ -56,6 +56,11 @@ export class UsersService {
     }
 
     const user = this.users[userIndex];
+
+    if (!updatePasswordDto.oldPassword || !updatePasswordDto.newPassword) {
+      throw new BadRequestException('Invalid password data');
+    }
+
     if (user.password !== updatePasswordDto.oldPassword) {
       throw new ForbiddenException('Old password is incorrect');
     }
