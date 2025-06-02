@@ -77,7 +77,6 @@ export class ArtistsService {
       throw new NotFoundException('Artist not found');
     }
 
-    // Update related tracks
     const tracks = this.tracksService.findAll();
     tracks.forEach((track) => {
       if (track.artistId === id) {
@@ -85,7 +84,6 @@ export class ArtistsService {
       }
     });
 
-    // Update related albums
     const albums = this.albumsService.findAll();
     albums.forEach((album) => {
       if (album.artistId === id) {
