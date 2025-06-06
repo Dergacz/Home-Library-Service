@@ -14,9 +14,50 @@ A NestJS-based service for managing a home music library, including users, artis
 
 - Node.js (v14 or higher)
 - npm or yarn
-- PostgreSQL database
+- Docker and Docker Compose
 
-## Installation
+## Running with Docker
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd home-library-service
+```
+
+2. Create a `.env` file in the root directory with the following content:
+
+```env
+DB_HOST=db
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=library
+NODE_ENV=development
+PORT=3000
+```
+
+3. Start the application using Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+The application will be available at `http://localhost:3000`
+
+To stop the application:
+
+```bash
+docker-compose down
+```
+
+To view logs:
+
+```bash
+docker-compose logs -f
+```
+
+## Development without Docker
 
 1. Clone the repository:
 
