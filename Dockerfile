@@ -1,12 +1,30 @@
+# Build stage
+FROM node:18-alpine AS builder
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm ci
+
+COPY . .
+
+RUN npm run build
+
+# Production stage
 FROM node:18-alpine
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci --only=production
 
-COPY . .
+COPY --from=builder /usr/src/app/dist ./dist
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start:prod"]
 
 # Development mode
 FROM node:18-alpine as development
@@ -22,20 +40,3 @@ COPY . .
 EXPOSE 3000
 
 CMD ["npm", "run", "start:dev"]
-
-# Production mode
-FROM node:18-alpine as production
-
-WORKDIR /usr/src/app
-
-COPY package*.json ./
-
-RUN npm install
-
-COPY . .
-
-RUN npm run build
-
-EXPOSE 3000
-
-CMD ["npm", "run", "start:prod"]
