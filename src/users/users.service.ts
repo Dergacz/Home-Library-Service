@@ -4,25 +4,30 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
-import { User } from './entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [];
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
 
-  findAll(): User[] {
-    return this.users;
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find();
   }
 
-  findOne(id: string): User {
+  async findOne(id: string): Promise<User> {
     if (!this.isValidUUID(id)) {
       throw new BadRequestException('Invalid user ID');
     }
 
-    const user = this.users.find((user) => user.id === id);
+    const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -30,63 +35,61 @@ export class UsersService {
     return user;
   }
 
-  create(createUserDto: CreateUserDto): User {
-    const now = Date.now();
-    const newUser: User = {
-      id: uuidv4(),
-      login: createUserDto.login,
-      password: createUserDto.password,
-      version: 1,
-      createdAt: now,
-      updatedAt: now,
-    };
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    this.users.push(newUser);
-    return newUser;
+    const newUser = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+
+    return this.usersRepository.save(newUser);
   }
 
-  update(id: string, updatePasswordDto: UpdatePasswordDto): User {
+  async update(
+    id: string,
+    updatePasswordDto: UpdatePasswordDto,
+  ): Promise<User> {
     if (!this.isValidUUID(id)) {
       throw new BadRequestException('Invalid user ID');
     }
 
-    const userIndex = this.users.findIndex((user) => user.id === id);
-    if (userIndex === -1) {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    const user = this.users[userIndex];
 
     if (!updatePasswordDto.oldPassword || !updatePasswordDto.newPassword) {
       throw new BadRequestException('Invalid password data');
     }
 
-    if (user.password !== updatePasswordDto.oldPassword) {
+    const isPasswordValid = await bcrypt.compare(
+      updatePasswordDto.oldPassword,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
       throw new ForbiddenException('Old password is incorrect');
     }
 
-    const updatedUser: User = {
-      ...user,
-      password: updatePasswordDto.newPassword,
-      version: user.version + 1,
-      updatedAt: Date.now(),
-    };
+    const hashedNewPassword = await bcrypt.hash(
+      updatePasswordDto.newPassword,
+      10,
+    );
 
-    this.users[userIndex] = updatedUser;
-    return updatedUser;
+    user.password = hashedNewPassword;
+    return this.usersRepository.save(user);
   }
 
-  remove(id: string): void {
+  async remove(id: string): Promise<void> {
     if (!this.isValidUUID(id)) {
       throw new BadRequestException('Invalid user ID');
     }
 
-    const userIndex = this.users.findIndex((user) => user.id === id);
-    if (userIndex === -1) {
+    const result = await this.usersRepository.delete(id);
+    if (result.affected === 0) {
       throw new NotFoundException('User not found');
     }
-
-    this.users.splice(userIndex, 1);
   }
 
   private isValidUUID(id: string): boolean {
