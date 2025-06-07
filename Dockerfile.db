@@ -1,0 +1,22 @@
+FROM postgres:14-alpine
+
+# Install additional tools
+RUN apk add --no-cache \
+    tzdata \
+    postgresql-contrib
+
+# Set timezone
+ENV TZ=UTC
+
+# Copy initialization scripts
+COPY ./db/init.sql /docker-entrypoint-initdb.d/
+
+# Custom PostgreSQL configuration
+COPY ./db/postgresql.conf /etc/postgresql/postgresql.conf
+
+# Set custom configuration file
+ENV POSTGRES_INITDB_ARGS="--config-file=/etc/postgresql/postgresql.conf"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD pg_isready -U postgres || exit 1 
